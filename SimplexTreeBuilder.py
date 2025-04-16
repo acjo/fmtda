@@ -60,18 +60,17 @@ class SimplexTreeBuilder:
         elif self.filtration_type == "alpha":
             
             # Alpha Complex from a Delaunay triangulation
-            if not self.points:
+            if self.points is None:
                 raise ValueError("AlphaComplex requires points.")
             alpha_complex = gudhi.AlphaComplex(points=self.points, precision=self.precision)
             simplex_tree = alpha_complex.create_simplex_tree(
-                max_alpha_square=self._get_alpha_sq(),
-                output_squared_values=output_squared_values
+                max_alpha_square=self._get_alpha_sq()
             )
 
         elif self.filtration_type == "cech":
             
             # Delaunay Cech Complex from a Delaunay triangulation
-            if not self.points:
+            if self.points is None:
                 raise ValueError("DelaunayCechComplex requires points.")
             cech_complex = gudhi.DelaunayCechComplex(points=self.points, precision=self.precision)
             simplex_tree = cech_complex.create_simplex_tree(
@@ -82,7 +81,7 @@ class SimplexTreeBuilder:
         elif self.filtration_type == "delaunay":
             
             # Delaunay Complex with no filtration
-            if not self.points:
+            if self.points is None:
                 raise ValueError("DelaunayComplex requires points.")
             delaunay_complex = gudhi.DelaunayComplex(points=self.points, precision=self.precision)
             simplex_tree = delaunay_complex.create_simplex_tree(
