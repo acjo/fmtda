@@ -3,6 +3,7 @@
 from typing import Optional
 
 import gudhi
+from gudhi import SimplexTree
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -38,25 +39,28 @@ class SimplexTreeBuilder:
             * "exact"
 
     """
-
+    #I modified this because one simplex tree should contain simplices of multiple 
+    #threshold values, not just one. -Nicole
     def __init__(
         self,
         points: Optional[list] = None,
         filtration_type: str = "rips",
-        max_edge_length: Optional[float] = None,
-        max_alpha_square: Optional[float] = None,
+        #max_edge_length: Optional[float] = None,
+        #max_alpha_square: Optional[float] = None,
         distance_matrix: Optional[np.ndarray] = None,
-        precision: str = "safe",
+        precision: str = "safe"
     ) -> None:
         self.points = points
         self.filtration_type = filtration_type.lower()
-        self.max_edge_length = max_edge_length
-        self.max_alpha_square = max_alpha_square
+        #self.max_edge_length = max_edge_length
+        #self.max_alpha_square = max_alpha_square
         self.distance_matrix = distance_matrix
         self.precision = precision
+        self.simplex_tree = SimplexTree()
 
     def build_simplex_tree(
-        self, max_dimension: int = 3, output_squared_values: bool = True
+        self, max_edge_length: float = 0, max_dimension: int = 3, 
+        output_squared_values: bool = True
     ):
         """Build a simplex tree.
 
@@ -70,16 +74,16 @@ class SimplexTreeBuilder:
         """
         if self.filtration_type == "rips":
             # Rips Complex from points or a distance matrix
-            if self.max_edge_length is None:
-                raise ValueError("Rips requires max_edge_length.")
+            #if self.max_edge_length is None:
+            #    raise ValueError("Rips requires max_edge_length.")
             if self.distance_matrix is not None:
                 rips_complex = gudhi.RipsComplex(
                     distance_matrix=self.distance_matrix,
-                    max_edge_length=self.max_edge_length,
+                    max_edge_length=max_edge_length,
                 )
             elif self.points is not None:
                 rips_complex = gudhi.RipsComplex(
-                    points=self.points, max_edge_length=self.max_edge_length
+                    points=self.points, max_edge_length=max_edge_length
                 )
             else:
                 raise ValueError(
@@ -88,7 +92,7 @@ class SimplexTreeBuilder:
             simplex_tree = rips_complex.create_simplex_tree(
                 max_dimension=max_dimension
             )
-
+        """
         # Truthfully I've only tried this out with Rips and know it works for Rips
         elif self.filtration_type == "alpha":
             # Alpha Complex from a Delaunay triangulation
@@ -126,8 +130,12 @@ class SimplexTreeBuilder:
             raise ValueError(
                 "filtration_type must be 'rips', 'alpha', 'cech', or 'delaunay'."
             )
-
-        self.simplex_tree = simplex_tree
+        """
+        full_tree = self.simplex_tree
+        for simplex, filt_value in simplex_tree.get_filtration():
+            full_tree.insert(simplex, filtration=filt_value)
+        
+        self.simplex_tree = full_tree
 
         return simplex_tree
 
