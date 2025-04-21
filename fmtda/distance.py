@@ -4,19 +4,54 @@ from typing import Callable, cast
 
 import numpy as np
 from numpy.typing import NDArray
-from pandas.core.frame import DataFrame
+from pandas.core.frame import DataFrame, Series
 from scipy.spatial.distance import cdist
 
-from fmtda.metric_types import *
+from fmtda import metric_types
 from fmtda.parse_dict import get_abbrev_map
 
 
 class Metric(object):
-    def __init__(self, type: int, c: NDArray) -> None:
-        self.type: int = type
+    """Metric class.
+
+    Parameters
+    ----------
+    t : int
+        Integer that indicates the type of metric
+    c : (n,) ndarray
+        The weighting vector for the metric.
+
+    Attributes
+    ----------
+    type : int
+        stores the t parameter
+    c : (n,) ndarray
+        stores the c parameter
+    fn : Callable
+        the metric Callable
+    __call__ : Callable
+        returns the distance between x and y useing self.fn
+    dist_matrix : Callable
+        Returns the distance matrix using self.fn
+
+    """
+
+    def __init__(self, t: int, c: NDArray) -> None:
+        if not isinstance(t, int):
+            raise ValueError(f"type parameter must be int, not {type(t)}")
+        if not isinstance(c, np.ndarray):
+            raise ValueError(
+                f"Constant multiple parameter must be an np.ndarray, not {type(c)}"
+            )
+        self.type: int = t
         self.c: NDArray = c
         fn_name = f"metric_{self.type}"
-        self.fn: Callable = eval(fn_name)
+        if hasattr(metric_types, "fn_name"):
+            self.fn: Callable = eval(f"metric_types.{fn_name}")
+        else:
+            raise AttributeError(
+                f"fmtda.metric_types does not have a function {fn_name}."
+            )
         return
 
     def __call__(
@@ -53,5 +88,5 @@ class Metric(object):
         D : (N,N) ndarray
             NxN array of distances
         """
-        D = cdist(X, X, metric=self)
+        D = cdist(X, X, metric=self.__call__)
         return D
