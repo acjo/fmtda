@@ -3,9 +3,9 @@
 from typing import Optional
 
 import gudhi
-from gudhi import SimplexTree
 import matplotlib.pyplot as plt
 import numpy as np
+from gudhi import SimplexTree  # type: ignore
 
 
 class SimplexTreeBuilder:
@@ -39,28 +39,31 @@ class SimplexTreeBuilder:
             * "exact"
 
     """
-    #I modified this because one simplex tree should contain simplices of multiple 
-    #threshold values, not just one. -Nicole
+
+    # I modified this because one simplex tree should contain simplices of multiple
+    # threshold values, not just one. -Nicole
     def __init__(
         self,
         points: Optional[list] = None,
         filtration_type: str = "rips",
-        #max_edge_length: Optional[float] = None,
-        #max_alpha_square: Optional[float] = None,
+        # max_edge_length: Optional[float] = None,
+        # max_alpha_square: Optional[float] = None,
         distance_matrix: Optional[np.ndarray] = None,
-        precision: str = "safe"
+        precision: str = "safe",
     ) -> None:
         self.points = points
         self.filtration_type = filtration_type.lower()
-        #self.max_edge_length = max_edge_length
-        #self.max_alpha_square = max_alpha_square
+        # self.max_edge_length = max_edge_length
+        # self.max_alpha_square = max_alpha_square
         self.distance_matrix = distance_matrix
         self.precision = precision
         self.simplex_tree = SimplexTree()
 
     def build_simplex_tree(
-        self, max_edge_length: float = 0, max_dimension: int = 3, 
-        output_squared_values: bool = True
+        self,
+        max_edge_length: float = 0,
+        max_dimension: int = 3,
+        output_squared_values: bool = True,
     ):
         """Build a simplex tree.
 
@@ -74,15 +77,15 @@ class SimplexTreeBuilder:
         """
         if self.filtration_type == "rips":
             # Rips Complex from points or a distance matrix
-            #if self.max_edge_length is None:
+            # if self.max_edge_length is None:
             #    raise ValueError("Rips requires max_edge_length.")
             if self.distance_matrix is not None:
-                rips_complex = gudhi.RipsComplex(
+                rips_complex = gudhi.RipsComplex(  # type: ignore
                     distance_matrix=self.distance_matrix,
                     max_edge_length=max_edge_length,
                 )
             elif self.points is not None:
-                rips_complex = gudhi.RipsComplex(
+                rips_complex = gudhi.RipsComplex(  # type: ignore
                     points=self.points, max_edge_length=max_edge_length
                 )
             else:
@@ -134,7 +137,7 @@ class SimplexTreeBuilder:
         full_tree = self.simplex_tree
         for simplex, filt_value in simplex_tree.get_filtration():
             full_tree.insert(simplex, filtration=filt_value)
-        
+
         self.simplex_tree = full_tree
 
         return simplex_tree
@@ -147,6 +150,7 @@ class SimplexTreeBuilder:
         )
 
     def get_betti_numbers(self):
+        """Return betti numbers."""
         if not hasattr(self, "simplex_tree"):
             raise RuntimeError(
                 "Simplex tree has not been built yet. Call build_simplex_tree() first."
@@ -156,22 +160,24 @@ class SimplexTreeBuilder:
         return self.simplex_tree.betti_numbers()
 
     def plot_persistence_diagram(self, legend=True):
+        """Plot persistence diagram."""
         if not hasattr(self, "simplex_tree"):
             raise RuntimeError("Simplex tree has not been built yet.")
 
         self.simplex_tree.compute_persistence()
 
         diag = self.simplex_tree.persistence()
-        gudhi.plot_persistence_diagram(diag, legend=legend)
+        gudhi.plot_persistence_diagram(diag, legend=legend)  # type: ignore
         plt.title("Persistence Diagram")
         plt.show()
 
     def plot_persistence_barcode(self):
+        """Plot peristence barcode."""
         if not hasattr(self, "simplex_tree"):
             raise RuntimeError("Simplex tree has not been built yet.")
 
         self.simplex_tree.compute_persistence()
         diag = self.simplex_tree.persistence()
-        gudhi.plot_persistence_barcode(diag)
+        gudhi.plot_persistence_barcode(diag)  # type: ignore
         plt.title("Persistence Barcode")
         plt.show()

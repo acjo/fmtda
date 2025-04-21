@@ -8,7 +8,7 @@ name = "topocore"
 authors = [
     { name = "Caelan Osman", email = "caelan.osman@jhuapl.edu" },
     { name = "Seth Graham", email = "Seth.Graham@jhuapl.edu" },
-    { name = "Nicole Gun", email = "Nicole.Gun@jhuapl.edu" }
+    { name = "Nicole Gun", email = "Nicole.Gun@jhuapl.edu" },
 ]
 maintainers = [
     { name = "Caelan Osman", email = "caelan.osman@jhuapl.edu" },
@@ -27,7 +27,8 @@ dependencies = [
     "gudhi==3.11.0",
     "pandas==2.2.3",
     "matplotlib==3.10.1",
-    "numpy==2.2.4"
+    "numpy==2.2.4",
+    "scipy==1.15.2",
 ]
 dynamic = ["version"]
 [project.urls]
