@@ -1,7 +1,10 @@
 """Metric funtions."""
 
+from typing import cast
+
 import numpy as np
 from numpy.typing import NDArray
+from pandas.core.array_algos import transforms
 from pandas.core.config_init import is_int
 from pandas.core.frame import DataFrame, Series
 
@@ -21,13 +24,14 @@ def _extract_features(
         ]
         return np.asarray(features).squeeze()
     else:
-        features = [x.loc[:, feature].to_numpy() for feature in feature_set]
-        return np.column_stack(
-            [
-                f.sum(axis=1) if t == "sum" else f
-                for f, t in zip(features, transforms)
-            ]
-        )
+        raise RuntimeError("vector required to be a series, not a DataFrame.")
+        # features = [x.loc[:, feature].to_numpy() for feature in feature_set]
+        # return np.column_stack(
+        #     [
+        #         f.sum(axis=1) if t == "sum" else f
+        #         for f, t in zip(features, transforms)
+        #     ]
+        # )
 
 
 def metric_1(
@@ -69,7 +73,9 @@ def metric_1(
     x_vals = _extract_features(x, feature_set, transforms)
     y_vals = _extract_features(y, feature_set, transforms)
 
-    return taxi_cab(c, x_vals, y_vals)
+    d = taxi_cab(c, x_vals, y_vals)
+    d = cast(float, d)
+    return d
 
 
 def metric_2(
@@ -110,7 +116,9 @@ def metric_2(
     x_vals = _extract_features(x, feature_set, transforms)
     y_vals = _extract_features(y, feature_set, transforms)
 
-    return taxi_cab(c, x_vals, y_vals)
+    d = taxi_cab(c, x_vals, y_vals)
+    d = cast(float, d)
+    return d
 
 
 def metric_3(
@@ -151,7 +159,9 @@ def metric_3(
     x_vals = _extract_features(x, feature_set, transforms)
     y_vals = _extract_features(y, feature_set, transforms)
 
-    return taxi_cab(c, x_vals, y_vals)
+    d = taxi_cab(c, x_vals, y_vals)
+    d = cast(float, d)
+    return d
 
 
 def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
@@ -193,12 +203,13 @@ def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
     d0 = c[0] * np.abs(x_vals[0] - y_vals[0])
     d1 = euclidean(1.0, x_vals[1:], y_vals[1:])
     d = d0 + d1
+    d = cast(float, d)
 
     return d
 
 
 def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
-    """Metric 5 based off metnal health systems and types of pain.
+    """Metric 5 based off mental health systems and types of pain.
 
     Parameters
     ----------
@@ -238,12 +249,60 @@ def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
     d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
     d1 = euclidean(1.0, x_vals[2:], y_vals[2:])
     d = d0 + d1
+    d = cast(float, d)
 
     return d
 
 
-def metric_6():
-    return
+def metric_6(c: np.ndarray, x: Series, y: Series) -> float:
+    """Metric 6 based off gastro intenstenial symptoms and regions where pain is present.
+
+    Parameters
+    ----------
+    c : NDArray
+        Constant weight factory arraa
+    x : Series or DataFrame
+        x point
+    y : Series or DataFrame
+        y point
+
+    Returns
+    -------
+    d : float
+        distance
+    """
+    group = ["gp"]
+    gastro = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if desc == "gastrointestinal symptoms"
+    ]
+    regions_of_pain = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if any(
+            "arm" == word.lower()
+            or "leg" == word.lower()
+            or "upper" == word.lower()
+            or "lower" == word.lower()
+            or "left" == word.lower()
+            or "right" == word.lower()
+            for word in desc.split(" ")
+        )
+    ]
+
+    feature_set = [group + gastro + regions_of_pain]
+    transforms = ["identity"]
+
+    x_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
+    d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
+    d1 = taxi_cab(np.ones_like(x_vals[2:]), x_vals[2:], y_vals[2:])
+
+    d = d0 + d1
+    d = cast(float, d)
+
+    return d
 
 
 def metric_7():

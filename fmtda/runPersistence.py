@@ -1,10 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from fmtda import Metric, SimplexTreeBuilder
-from fmtda import ALL_FEATURES
-from matplotlib import rcParams
 from matplotlib import pyplot as plt
+from matplotlib import rcParams
+
+from fmtda import Metric, SimplexTreeBuilder
 
 rcParams["font.family"] = "serif"
 rcParams["font.size"] = 15
@@ -26,6 +27,7 @@ constant_arrays = [
     np.ones(3),
     np.ones(3),
     np.ones(1),
+    np.ones(2),
     np.ones(2),
 ]
 
