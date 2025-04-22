@@ -38,8 +38,6 @@ for i, c in enumerate(constant_arrays):
     metric = Metric(i + 1, c)
 
     distMat = metric.dist_matrix(patientData)
-    print("Complete!")
-    continue
 
     minDist = np.min(distMat)
     maxDist = np.max(distMat)
