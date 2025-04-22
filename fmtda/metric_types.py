@@ -8,7 +8,9 @@ from pandas.core.frame import DataFrame, Series
 from fmtda._metric_base import euclidean, taxi_cab
 from fmtda.parse_dict import get_abbrev_map
 
-abbrev2desc, desc2abbrev = get_abbrev_map()
+abbrev2desc, _ = get_abbrev_map()
+
+
 
 
 def _extract_features(
@@ -16,9 +18,8 @@ def _extract_features(
 ) -> NDArray:
     if isinstance(x, Series):
         features = [x.loc[feature].to_numpy() for feature in feature_set]
-        return np.asarray(
-            [f.sum() if t == "sum" else f for f, t in zip(features, transforms)]
-        )
+        features = [f.sum() if t == "sum" else f for f, t in zip(features, transforms)]
+        return np.asarray(features)
     else:
         features = [x.loc[:, feature].to_numpy() for feature in feature_set]
         return np.column_stack(
@@ -29,54 +30,51 @@ def _extract_features(
         )
 
 
-def metric_1(c: np.ndarray, x: Series | DataFrame, y: DataFrame | Series):
+def metric_1(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame):
     """First metric based on left and right side of the body."""
     left_features = [
         abbrev
         for abbrev, desc in abbrev2desc.items()
-        if any("left" == w.lower() for w in desc.split(""))
+        if any("left" == word.lower() for word in desc.split(" "))
     ]
     right_features = [
         abbrev
         for abbrev, desc in abbrev2desc.items()
-        if any("right" == w.lower() for w in desc.split(""))
+        if any("right" == word.lower() for word in desc.split(" "))
     ]
 
     group = [["gp"]]
 
-    transforms = ["identity"] + ["sum"] * (
-        len(left_features) + len(right_features)
-    )
-    feature_set = group + right_features + left_features
+    feature_set = group + [right_features] + [left_features]
+
+    transforms = ["sum"] * len(feature_set)
 
     x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
 
     return taxi_cab(c, x_vals, y_vals)
 
 
-def metric_2(c: np.ndarray, x: Series | DataFrame, y: DataFrame | Series):
-    """First metric based on arms and legs."""
+def metric_2(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame):
+    """second metric based on arms and legs."""
     arm_features = [
         abbrev
         for abbrev, desc in abbrev2desc.items()
-        if any("arm" == w.lower() for w in desc.split(""))
+        if any("arm" == word.lower() for word in desc.split(" "))
     ]
     leg_features = [
         abbrev
         for abbrev, desc in abbrev2desc.items()
-        if any("leg" == w.lower() for w in desc.split(""))
+        if any("leg" == word.lower() for word in desc.split(" "))
     ]
 
     group = [["gp"]]
 
-    transforms = ["identity"] + ["sum"] * (
-        len(arm_features) + len(leg_features)
-    )
-    feature_set = group + arm_features + leg_features
+    feature_set = group + [arm_features] + [leg_features]
+    transforms = ["sum"] * len(feature_set)
 
     x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
 
     return taxi_cab(c, x_vals, y_vals)
 
@@ -96,10 +94,8 @@ def metric_3(c: np.ndarray, x: Series | DataFrame, y: DataFrame | Series):
 
     group = [["gp"]]
 
-    transforms = ["identity"] + ["sum"] * (
-        len(upper_features) + len(lower_features)
-    )
-    feature_set = group + upper_features + lower_features
+    feature_set = group + [upper_features] + [lower_features]
+    transforms = ["sum"] * len(feature_set)
 
     x_vals = _extract_features(x, feature_set, transforms)
     y_vals = _extract_features(x, feature_set, transforms)

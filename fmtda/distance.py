@@ -1,14 +1,12 @@
 """metric module."""
 
-from typing import Callable, cast
+from typing import Callable
 
 import numpy as np
 from numpy.typing import NDArray
 from pandas.core.frame import DataFrame, Series
-from scipy.spatial.distance import cdist
 
 from fmtda import metric_types
-from fmtda.parse_dict import get_abbrev_map
 
 
 class Metric(object):
@@ -46,7 +44,7 @@ class Metric(object):
         self.type: int = t
         self.c: NDArray = c
         fn_name = f"metric_{self.type}"
-        if hasattr(metric_types, "fn_name"):
+        if hasattr(metric_types, fn_name):
             self.fn: Callable = eval(f"metric_types.{fn_name}")
         else:
             raise AttributeError(
@@ -88,5 +86,9 @@ class Metric(object):
         D : (N,N) ndarray
             NxN array of distances
         """
-        D = cdist(X, X, metric=self.__call__)
+        N = X.shape[0]
+        D = np.zeros((N,N),dtype=float)
+        for i in range(N):
+            for j in range(N):
+                D[i,j] = self(X.iloc[i,:], X.iloc[j, :])
         return D

@@ -29,6 +29,7 @@ dependencies = [
     "matplotlib==3.10.1",
     "numpy==2.2.4",
     "scipy==1.15.2",
+    "openpyxl==3.1.5"
 ]
 dynamic = ["version"]
 [project.urls]
