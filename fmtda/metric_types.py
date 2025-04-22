@@ -209,7 +209,7 @@ def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
 
 
 def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
-    """Metric 5 based off mental health systems and types of pain.
+    """Metric 5 based off height and regions where pain is present.
 
     Parameters
     ----------
@@ -255,6 +255,89 @@ def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
 
 
 def metric_6(c: np.ndarray, x: Series, y: Series) -> float:
+    """Metric 6 based off BMI and types of pain.
+
+    Parameters
+    ----------
+    c : NDArray
+        Constant weight factory arraa
+    x : Series or DataFrame
+        x point
+    y : Series or DataFrame
+        y point
+
+    Returns
+    -------
+    d : float
+        distance
+    """
+    group = ["gp"]
+    bmi = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if desc == "body mass index"
+    ]
+    pain_features = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if any("pain" == word.lower() for word in desc.split(" "))
+    ]
+    pain_features.remove("14_")
+
+    feature_set = [group + bmi + pain_features]
+    transforms = ["identity"]
+
+    x_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
+    d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
+    d1 = euclidean(1.0, x_vals[2:], y_vals[2:])
+
+    d = d0 + d1
+    d = cast(float, d)
+
+    return d
+
+
+def metric_7(c: np.ndarray, x: Series, y: Series) -> float:
+    """Metric 7 based off mental health systems and types of pain.
+
+    Parameters
+    ----------
+    c : NDArray
+        Constant weight factory arraa
+    x : Series or DataFrame
+        x point
+    y : Series or DataFrame
+        y point
+
+    Returns
+    -------
+    d : float
+        distance
+    """
+    if not c.size == 1:
+        raise RuntimeError("c must have exactly one element.")
+
+    pain_features = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if any("pain" == word.lower() for word in desc.split(" "))
+    ]
+    pain_features.remove("14_")
+
+    feature_set = [["gp", "13_g_15", "13_lw_15", "3_sss_11"] + pain_features]
+    transforms = ["identity"]
+    x_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
+
+    d0 = taxi_cab(c, x_vals[:1], y_vals[:1])
+    d1 = taxi_cab(np.ones_like(x_vals[1:]), x_vals[1:], y_vals[1:])
+    d = d0 + d1
+    d = cast(float, d)
+    return d
+
+
+def metric_8(c: np.ndarray, x: Series, y: Series) -> float:
     """Metric 6 based off gastro intenstenial symptoms and regions where pain is present.
 
     Parameters
@@ -301,15 +384,6 @@ def metric_6(c: np.ndarray, x: Series, y: Series) -> float:
 
     d = d0 + d1
     d = cast(float, d)
-
-    return d
-
-
-def metric_7():
-    return
-
-
-def metric_8():
     return
 
 

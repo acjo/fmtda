@@ -29,6 +29,8 @@ constant_arrays = [
     np.ones(1),
     np.ones(2),
     np.ones(2),
+    np.ones(1),
+    np.ones(2),
 ]
 
 for i, c in enumerate(constant_arrays):
