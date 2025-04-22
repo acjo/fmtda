@@ -11,15 +11,15 @@ from fmtda.parse_dict import get_abbrev_map
 abbrev2desc, _ = get_abbrev_map()
 
 
-
-
 def _extract_features(
     x: Series | DataFrame, feature_set: list[list[str]], transforms: list[str]
 ) -> NDArray:
     if isinstance(x, Series):
         features = [x.loc[feature].to_numpy() for feature in feature_set]
-        features = [f.sum() if t == "sum" else f for f, t in zip(features, transforms)]
-        return np.asarray(features)
+        features = [
+            f.sum() if t == "sum" else f for f, t in zip(features, transforms)
+        ]
+        return np.asarray(features).squeeze()
     else:
         features = [x.loc[:, feature].to_numpy() for feature in feature_set]
         return np.column_stack(
@@ -30,9 +30,11 @@ def _extract_features(
         )
 
 
-def metric_1(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_1(
+    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
+) -> float:
     """First metric based on left and right side of the body.
-    
+
     Parameters
     ----------
     c : NDArray
@@ -70,9 +72,11 @@ def metric_1(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> flo
     return taxi_cab(c, x_vals, y_vals)
 
 
-def metric_2(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_2(
+    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
+) -> float:
     """Second metric based on arms and legs.
-    
+
     Parameters
     ----------
     c : NDArray
@@ -109,9 +113,11 @@ def metric_2(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> flo
     return taxi_cab(c, x_vals, y_vals)
 
 
-def metric_3(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_3(
+    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
+) -> float:
     """Third metric based on upper and lower part of the body.
-    
+
     Parameters
     ----------
     c : NDArray
@@ -148,9 +154,9 @@ def metric_3(c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame) -> flo
     return taxi_cab(c, x_vals, y_vals)
 
 
-def metric_4(c:NDArray, x:Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
     """Metric 4 based off the type of pain.
-    
+
     Parameters
     ----------
     c : NDArray
@@ -165,36 +171,75 @@ def metric_4(c:NDArray, x:Series | DataFrame, y: Series | DataFrame) -> float:
     d : float
         distance
     """
-
     if not c.size == 1:
         raise RuntimeError("c must have only one element.")
 
-    group = [["gp"]]
+    group = ["gp"]
 
     pain_features = [
         abbrev
-        for abbrev, desc in abbrev2desc().items()
-        if any("pain" == word.lower() for word in desc.split(" ") 
-               and all("psychological" != word.lower() for word in desc.split(" ")))
-
+        for abbrev, desc in abbrev2desc.items()
+        if any("pain" == word.lower() for word in desc.split(" "))
+        and all("psychological" != word.lower() for word in desc.split(" "))
     ]
+    pain_features.remove("14_")
 
-    feature_set = group + [pain_features]
-    transforms = ["sum"] * len(feature_set)
+    feature_set = [group + pain_features]
+    transforms = ["identity"]
 
     x_vals = _extract_features(x, feature_set, transforms)
     y_vals = _extract_features(y, feature_set, transforms)
 
-    d1 = c[0] * np.abs(x_vals[0] - y_vals[0])
-    d2 = euclidean(1, x_vals[1:], y_vals[1:])
-    d = d1 + d2
+    d0 = c[0] * np.abs(x_vals[0] - y_vals[0])
+    d1 = euclidean(1.0, x_vals[1:], y_vals[1:])
+    d = d0 + d1
 
     return d
 
 
+def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+    """Metric 5 based off metnal health systems and types of pain.
 
-def metric_5():
-    return
+    Parameters
+    ----------
+    c : NDArray
+        Constant weight factory arraa
+    x : Series or DataFrame
+        x point
+    y : Series or DataFrame
+        y point
+
+    Returns
+    -------
+    d : float
+        distance
+    """
+    if not c.size == 2:
+        raise RuntimeError("c must have exactly two elements.")
+
+    regions_of_pain = [
+        abbrev
+        for abbrev, desc in abbrev2desc.items()
+        if any(
+            "arm" == word.lower()
+            or "leg" == word.lower()
+            or "upper" == word.lower()
+            or "lower" == word.lower()
+            or "left" == word.lower()
+            or "right" == word.lower()
+            for word in desc.split(" ")
+        )
+    ]
+    feature_set = [["gp", "16_h"] + regions_of_pain]
+    transforms = ["identity"]
+    x_vals = _extract_features(x, feature_set, transforms)
+    y_vals = _extract_features(y, feature_set, transforms)
+
+    d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
+    d1 = euclidean(1.0, x_vals[2:], y_vals[2:])
+    d = d0 + d1
+
+    return d
 
 
 def metric_6():

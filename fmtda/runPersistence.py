@@ -17,16 +17,25 @@ rcParams["figure.dpi"] = 200
 rcParams["axes.titlesize"] = 15
 
 
-data_path = Path(__file__).parent/"Clinical_fm_66_.xlsx"
+data_path = Path(__file__).parent / "Clinical_fm_66_.xlsx"
 patientData = pd.read_excel(data_path, sheet_name="data_66")
-patientData = patientData.loc[:, ALL_FEATURES]
-patientData.dropna(axis=0,inplace=True)
-constant_arrays = [np.ones(3,), np.ones(3,), np.ones(3,)]
+# patientData = patientData.loc[:, ALL_FEATURES]
+patientData.dropna(axis=0, inplace=True)
+constant_arrays = [
+    np.ones(3),
+    np.ones(3),
+    np.ones(3),
+    np.ones(1),
+    np.ones(2),
+]
 
 for i, c in enumerate(constant_arrays):
+    print(f"metric: {i+1}")
     metric = Metric(i + 1, c)
 
     distMat = metric.dist_matrix(patientData)
+    print("Complete!")
+    continue
 
     minDist = np.min(distMat)
     maxDist = np.max(distMat)

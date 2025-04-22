@@ -87,8 +87,8 @@ class Metric(object):
             NxN array of distances
         """
         N = X.shape[0]
-        D = np.zeros((N,N),dtype=float)
+        D = np.zeros((N, N), dtype=float)
         for i in range(N):
             for j in range(N):
-                D[i,j] = self(X.iloc[i,:], X.iloc[j, :])
+                D[i, j] = self(X.iloc[i, :], X.iloc[j, :])
         return D
