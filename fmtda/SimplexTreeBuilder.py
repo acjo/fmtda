@@ -140,7 +140,7 @@ class SimplexTreeBuilder:
 
         self.simplex_tree = full_tree
 
-        return simplex_tree
+        return self.simplex_tree
 
     def _get_alpha_sq(self):
         return (

@@ -1,5 +1,6 @@
 """Metric funtions."""
 
+from optparse import Values
 from typing import cast
 
 import numpy as np
@@ -14,29 +15,31 @@ from fmtda.parse_dict import get_abbrev_map
 abbrev2desc, _ = get_abbrev_map()
 
 
-def _extract_features(
-    x: Series | DataFrame, feature_set: list[list[str]], transforms: list[str]
-) -> NDArray:
-    if isinstance(x, Series):
-        features = [x.loc[feature].to_numpy() for feature in feature_set]
-        features = [
-            f.sum() if t == "sum" else f for f, t in zip(features, transforms)
-        ]
-        return np.asarray(features).squeeze()
-    else:
-        raise RuntimeError("vector required to be a series, not a DataFrame.")
-        # features = [x.loc[:, feature].to_numpy() for feature in feature_set]
-        # return np.column_stack(
-        #     [
-        #         f.sum(axis=1) if t == "sum" else f
-        #         for f, t in zip(features, transforms)
-        #     ]
-        # )
+def _input_check(c: NDArray, x: NDArray, y: NDArray) -> None:
+    """Input checks to metrics."""
+    if x.shape != y.shape:
+        raise RuntimeError(
+            f"x and y expected to be the same shape.\nShape of x: {x.shape}, shape of y: {y.shape}"
+        )
+    elif x.ndim == 1:
+        if c.size != x.size:
+            raise RuntimeError(
+                "Feature vector is not the same size as the weighting vector."
+            )
+    elif x.ndim == 2:
+        if c.size != x.shape[1]:
+            raise RuntimeError(
+                "More features than weighting constant, parameter c expected to have the same length as the number of columns of x and y."
+            )
+    elif x.ndim > 2:
+        raise RuntimeError("x expected to have 1 or 2 dimensions.")
+    elif y.ndim > 2:
+        raise RuntimeError("y expected to have 1 or 2 dimensions.")
+
+    return
 
 
-def metric_1(
-    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
-) -> float:
+def metric_1(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """First metric based on left and right side of the body.
 
     Parameters
@@ -52,35 +55,20 @@ def metric_1(
     -------
     d : float
         distance
+
+    Raises
+    ------
+    ValueError
+        * if x and y are not the same shape
+        * If c is not the right size (c has to be the same size as the number of features of x and y)
+        * if the number of dimensions of x/y exceeds 2.
     """
-    left_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("left" == word.lower() for word in desc.split(" "))
-    ]
-    right_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("right" == word.lower() for word in desc.split(" "))
-    ]
-
-    group = [["gp"]]
-
-    feature_set = group + [right_features] + [left_features]
-
-    transforms = ["sum"] * len(feature_set)
-
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-
-    d = taxi_cab(c, x_vals, y_vals)
-    d = cast(float, d)
+    _input_check(c, x, y)
+    d = taxi_cab(c, x, y)
     return d
 
 
-def metric_2(
-    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
-) -> float:
+def metric_2(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Second metric based on arms and legs.
 
     Parameters
@@ -96,34 +84,18 @@ def metric_2(
     -------
     d : float
         distance
+
+    Raises
+    ------
+    ValueError
+        * if x and y are not the same shape
+        * If c is not the right size (c has to be the same size as the number of features of x and y)
+        * if the number of dimensions of x/y exceeds 2.
     """
-    arm_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("arm" == word.lower() for word in desc.split(" "))
-    ]
-    leg_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("leg" == word.lower() for word in desc.split(" "))
-    ]
-
-    group = [["gp"]]
-
-    feature_set = group + [arm_features] + [leg_features]
-    transforms = ["sum"] * len(feature_set)
-
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-
-    d = taxi_cab(c, x_vals, y_vals)
-    d = cast(float, d)
-    return d
+    return metric_1(c, x, y)
 
 
-def metric_3(
-    c: np.ndarray, x: Series | DataFrame, y: Series | DataFrame
-) -> float:
+def metric_3(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Third metric based on upper and lower part of the body.
 
     Parameters
@@ -139,32 +111,18 @@ def metric_3(
     -------
     d : float
         distance
+
+    Raises
+    ------
+    ValueError
+        * if x and y are not the same shape
+        * If c is not the right size (c has to be the same size as the number of features of x and y)
+        * if the number of dimensions of x/y exceeds 2.
     """
-    upper_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("upper" == word.lower() for word in desc.split(" "))
-    ]
-    lower_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("lower" == word.lower() for word in desc.split(" "))
-    ]
-
-    group = [["gp"]]
-
-    feature_set = group + [upper_features] + [lower_features]
-    transforms = ["sum"] * len(feature_set)
-
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-
-    d = taxi_cab(c, x_vals, y_vals)
-    d = cast(float, d)
-    return d
+    return metric_1(c, x, y)
 
 
-def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_4(c: NDArray | float, x: NDArray, y: NDArray) -> float | NDArray:
     """Metric 4 based off the type of pain.
 
     Parameters
@@ -181,34 +139,27 @@ def metric_4(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
     d : float
         distance
     """
-    if not c.size == 1:
-        raise RuntimeError("c must have only one element.")
+    if isinstance(c, np.ndarray) and c.size != 1:
+        raise RuntimeError("c must have only one element if it is an array.")
+    if isinstance(c, float):
+        c = np.array([c], dtype=float)
+    else:
+        raise RuntimeError("c must be a float or a single element array.")
 
-    group = ["gp"]
-
-    pain_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("pain" == word.lower() for word in desc.split(" "))
-        and all("psychological" != word.lower() for word in desc.split(" "))
-    ]
-    pain_features.remove("14_")
-
-    feature_set = [group + pain_features]
-    transforms = ["identity"]
-
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-
-    d0 = c[0] * np.abs(x_vals[0] - y_vals[0])
-    d1 = euclidean(1.0, x_vals[1:], y_vals[1:])
+    x_2d = np.atleast_2d(x)
+    y_2d = np.atleast_2d(y)
+    d0 = c[0] * np.abs(x_2d[:, 0] - y_2d[:, 0])
+    d1 = euclidean(1.0, x_2d[:, 1:], y_2d[:, 1:])
     d = d0 + d1
-    d = cast(float, d)
 
+    if x.ndim == 1:
+        d = d.item()
+    else:
+        d = d.squeeze()
     return d
 
 
-def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
+def metric_5(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Metric 5 based off height and regions where pain is present.
 
     Parameters
@@ -228,33 +179,18 @@ def metric_5(c: NDArray, x: Series | DataFrame, y: Series | DataFrame) -> float:
     if not c.size == 2:
         raise RuntimeError("c must have exactly two elements.")
 
-    regions_of_pain = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any(
-            "arm" == word.lower()
-            or "leg" == word.lower()
-            or "upper" == word.lower()
-            or "lower" == word.lower()
-            or "left" == word.lower()
-            or "right" == word.lower()
-            for word in desc.split(" ")
-        )
-    ]
-    feature_set = [["gp", "16_h"] + regions_of_pain]
-    transforms = ["identity"]
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-
-    d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
-    d1 = euclidean(1.0, x_vals[2:], y_vals[2:])
+    x_2d = np.atleast_2d(x)
+    y_2d = np.atleast_2d(y)
+    d0 = taxi_cab(c, x_2d[:, :2], y_2d[:, :2])
+    d1 = taxi_cab(np.ones_like(x_2d[0, 2:]), x_2d[:, 2:], y_2d[:, 2:])
     d = d0 + d1
-    d = cast(float, d)
 
+    if isinstance(d, float):
+        return d
     return d
 
 
-def metric_6(c: np.ndarray, x: Series, y: Series) -> float:
+def metric_6(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Metric 6 based off BMI and types of pain.
 
     Parameters
@@ -271,34 +207,10 @@ def metric_6(c: np.ndarray, x: Series, y: Series) -> float:
     d : float
         distance
     """
-    group = ["gp"]
-    bmi = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if desc == "body mass index"
-    ]
-    pain_features = [
-        abbrev
-        for abbrev, desc in abbrev2desc.items()
-        if any("pain" == word.lower() for word in desc.split(" "))
-    ]
-    pain_features.remove("14_")
-
-    feature_set = [group + bmi + pain_features]
-    transforms = ["identity"]
-
-    x_vals = _extract_features(x, feature_set, transforms)
-    y_vals = _extract_features(y, feature_set, transforms)
-    d0 = taxi_cab(c, x_vals[:2], y_vals[:2])
-    d1 = euclidean(1.0, x_vals[2:], y_vals[2:])
-
-    d = d0 + d1
-    d = cast(float, d)
-
-    return d
+    return
 
 
-def metric_7(c: np.ndarray, x: Series, y: Series) -> float:
+def metric_7(c: NDArray, x: Series, y: Series) -> float:
     """Metric 7 based off mental health systems and types of pain.
 
     Parameters
@@ -337,7 +249,7 @@ def metric_7(c: np.ndarray, x: Series, y: Series) -> float:
     return d
 
 
-def metric_8(c: np.ndarray, x: Series, y: Series) -> float:
+def metric_8(c: NDArray, x: Series, y: Series) -> float:
     """Metric 6 based off gastro intenstenial symptoms and regions where pain is present.
 
     Parameters
