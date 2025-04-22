@@ -403,7 +403,46 @@ def metric_12():
     return
 
 
-def metric_13():
+def metric_13(c: np.ndarray, X: np.ndarray, Y: np.ndarray) -> float:
+    
+    """
+    Metric 8 based on a weighted combination of metrics 1 - 8.
+    
+    Note: The X and Y inputs do not take into account the way the new data preprocessing works. 
+    Please delete this comment when updated. 
+    
+    Parameters
+    ----------
+    c : NDArray
+        Constant weight factory array
+    x : Series or DataFrame
+        x point
+    y : Series or DataFrame
+        y point
+
+    Returns
+    -------
+    d : float
+        distance
+    """
+    if not c.size == 8:
+        raise RuntimeError("c must have eight elements.")
+    
+    d1 = metric_1(c[0], X[:,0], Y[:,0])
+    d2 = metric_2(c[1], X[:,1], Y[:,1])
+    d3 = metric_3(c[2], X[:,2], Y[:,2])
+    d4 = metric_4(c[3], X[:,3], Y[:,3])
+    d5 = metric_5(c[4], X[:,4], Y[:,4])
+    d6 = metric_6(c[5], X[:,5], Y[:,5])
+    d7 = metric_7(c[6], X[:,6], Y[:,6])
+    d8 = metric_8(c[7], X[:,7], Y[:,7])
+    
+    d = np.sum(d1, d2, d3, d4, d5, d6, d7, d8)
+    
+    return d
+    
+    
+    
     return
 
 
