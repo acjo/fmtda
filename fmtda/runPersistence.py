@@ -1,11 +1,10 @@
 from pathlib import Path
 
-import gudhi as gd
+import gudhi as gd # type: ignore
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
-from scipy.spatial.distance import cdist
 
 from fmtda import Metric, SimplexTreeBuilder
 from fmtda import utils
@@ -97,4 +96,3 @@ for i, c in enumerate(constant_arrays):
     _ = plt.title(f"Persistence Diagram for Metric {i+1}")
     plt.savefig(f"persistence_diagram_{i+1}.png")
 
-    plt.show()

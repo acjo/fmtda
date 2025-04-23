@@ -2,11 +2,11 @@
 
 from typing import Optional
 
-import gudhi
+import gudhi # type: ignore
 import matplotlib.pyplot as plt
 import numpy as np
 from gudhi import SimplexTree  # type: ignore
-from gudhi.representations import Entropy
+from gudhi.representations import Entropy # type: ignore
 
 
 class SimplexTreeBuilder:

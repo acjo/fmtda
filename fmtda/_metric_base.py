@@ -1,7 +1,5 @@
 """metric functions."""
 
-from optparse import Values
-
 import numpy as np
 
 

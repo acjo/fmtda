@@ -1,13 +1,7 @@
 """Metric funtions."""
 
-from optparse import Values
-from typing import cast
-
 import numpy as np
 from numpy.typing import NDArray
-from pandas.core.array_algos import transforms
-from pandas.core.config_init import is_int
-from pandas.core.frame import DataFrame, Series
 
 from fmtda._metric_base import euclidean, taxi_cab
 from fmtda.parse_dict import get_abbrev_map
@@ -46,9 +40,9 @@ def metric_1(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory array
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -75,9 +69,9 @@ def metric_2(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory array
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -102,9 +96,9 @@ def metric_3(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -129,9 +123,9 @@ def metric_4(c: NDArray | float, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -162,9 +156,9 @@ def metric_5(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -195,9 +189,9 @@ def metric_6(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -222,16 +216,16 @@ def metric_6(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     return d
 
 
-def metric_7(c: NDArray, x: Series, y: Series) -> float | NDArray:
+def metric_7(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Metric 7 based off mental health systems and types of pain.
 
     Parameters
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
@@ -257,16 +251,16 @@ def metric_7(c: NDArray, x: Series, y: Series) -> float | NDArray:
     return d
 
 
-def metric_8(c: NDArray, x: Series, y: Series) -> float | NDArray:
+def metric_8(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     """Metric 6 based off gastro intenstenial symptoms and regions where pain is present.
 
     Parameters
     ----------
     c : NDArray
         Constant weight factory arraa
-    x : Series or DataFrame
+    x : NDArray
         x point
-    y : Series or DataFrame
+    y : NDArray
         y point
 
     Returns
