@@ -6,10 +6,11 @@ import gudhi
 import matplotlib.pyplot as plt
 import numpy as np
 from gudhi import SimplexTree  # type: ignore
+from gudhi.representations import Entropy
 
 
 class SimplexTreeBuilder:
-    """GUDHI SimplexTree.
+    """GUDHI SimplexTree Wrapper.
 
     Builds a Guidhi Simplex tree with the following options:
 
@@ -158,6 +159,52 @@ class SimplexTreeBuilder:
 
         self.simplex_tree.compute_persistence()
         return self.simplex_tree.betti_numbers()
+    
+    def get_persistence_entropy(self, mode="scalar", diag=None, dimension=0):
+        """Return persistence entropy, defined as the Shannon Entropy of the normalized
+        lifetimes of persistent features.
+        
+        Parameters
+        ----------
+        mode : str
+            scalar or vector to return a single persistence entropy statistic, or a 
+            persistence entropy function, respectively.
+            
+        diag : list of tuples
+            Persistence diagram as a list of (dim, (birth, death)) tuples. Can 
+            compute from the simplex_tree.persistence() method. 
+            
+        dimension : int
+            Homology dimension to extract features from (e.g., 0, 1, 2, etc.).
+            
+        """
+    
+        if not hasattr(self, "simplex_tree"):
+            raise RuntimeError(
+                "Simplex tree has not been built yet. Call build_simplex_tree() first."
+            )
+        
+        if diag is None:
+            raise ValueError("Persistence diagram `diag` must be provided.")
+        
+        # Extract (birth, death) pairs for the specified homology dimension
+        birth_death_pairs = np.array([pair[1] for pair in diag if pair[0] == dimension])
+        
+        if len(birth_death_pairs) == 0:
+            raise ValueError(f"No features found in dimension {dimension}.")
+
+        
+        if mode == "scalar":
+            entropy = Entropy(mode="scalar")
+            return entropy(birth_death_pairs)
+        
+        elif mode == "vector":
+            entropy = Entropy(mode="vector", resolution=100)
+            entropy.fit([birth_death_pairs])
+            return entropy.transform([birth_death_pairs])[0]
+        
+        else:
+            raise ValueError("Mode must be either 'scalar' or 'vector'.")
 
     def plot_persistence_diagram(self, legend=True):
         """Plot persistence diagram."""
@@ -181,3 +228,5 @@ class SimplexTreeBuilder:
         gudhi.plot_persistence_barcode(diag)  # type: ignore
         plt.title("Persistence Barcode")
         plt.show()
+        
+     
