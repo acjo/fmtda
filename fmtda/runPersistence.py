@@ -94,6 +94,7 @@ for i, c in enumerate(constant_arrays):
         homology_coeff_field=2, persistence_dim_max=True, min_persistence=1.45
     )
     gd.plot_persistence_diagram(diagram_rips, alpha=0.3)
-    _ = plt.title("Persistence diagram of the Rips complex")
+    _ = plt.title(f"Persistence Diagram for Metric {i+1}")
+    plt.savefig(f"persistence_diagram_{i+1}.png")
 
     plt.show()
