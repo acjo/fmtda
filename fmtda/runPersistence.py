@@ -1,16 +1,15 @@
+from copy import deepcopy
 from pathlib import Path
 
-import gudhi as gd # type: ignore
+import gudhi as gd  # type: ignore
 import numpy as np
 import pandas as pd
+from gudhi.representations import Entropy
+from gudhi.representations.vector_methods import Landscape
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
 
-from fmtda import Metric, SimplexTreeBuilder
-from fmtda import utils
-from copy import deepcopy
-from gudhi.representations import Entropy
-from gudhi.representations.vector_methods import Landscape
+from fmtda import Metric, SimplexTreeBuilder, utils
 
 rcParams["font.family"] = "serif"
 rcParams["font.size"] = 15
@@ -34,9 +33,9 @@ entropies = {}
 
 # set weights for metrics.
 constant_arrays = [
-    np.random.random(3),
-    np.random.random(3),
-    np.random.random(3),
+    np.concatenate((np.random.random(1), np.ones(2))),
+    np.concatenate((np.random.random(1), np.ones(2))),
+    np.concatenate((np.random.random(1), np.ones(2))),
     np.random.random(1),
     np.random.random(2),
     np.random.random(2),
@@ -45,7 +44,7 @@ constant_arrays = [
 ]
 w = np.random.random(8)
 copy_constant_arrays = deepcopy(constant_arrays)
-constant_arrays.append((w,copy_constant_arrays))
+constant_arrays.append((w, copy_constant_arrays))  # type: ignore
 sizes = []
 
 for i, c in enumerate(constant_arrays):
@@ -97,11 +96,13 @@ for i, c in enumerate(constant_arrays):
         homology_coeff_field=2, persistence_dim_max=True, min_persistence=1.45
     )
 
-    # Persistence Diagram Analysis via Persistence Entropy + Landscapes 
+    # Persistence Diagram Analysis via Persistence Entropy + Landscapes
     entropies[i] = {}
     for d in range(max_dim):
         try:
-            birth_death_pairs = np.array([pair[1] for pair in diagram_rips if pair[0] == d])
+            birth_death_pairs = np.array(
+                [pair[1] for pair in diagram_rips if pair[0] == d]
+            )
             if birth_death_pairs.ndim != 2 or birth_death_pairs.shape[1] != 2:
                 raise ValueError(f"No valid birth-death pairs in H{d}")
 
@@ -117,7 +118,9 @@ for i, c in enumerate(constant_arrays):
             entropy = Entropy(mode="scalar")
             persistence_entropy = entropy(valid_pairs)
             entropies[i][f"H{d}"] = persistence_entropy
-            print(f"Persistence Entropy for Metric {i+1} on H{d}: {persistence_entropy}")
+            print(
+                f"Persistence Entropy for Metric {i+1} on H{d}: {persistence_entropy}"
+            )
 
             # Plotting Persistence Landscapes for H1
             if d == 1:
@@ -130,11 +133,13 @@ for i, c in enumerate(constant_arrays):
 
                 plt.figure(figsize=(6, 4))
                 for k in range(nl):
-                    plt.plot(grid, pl_matrix[k], label=f'lambda$_{{{k+1}}}$')
-                plt.title(rf'Persistence Landscape (H$_{{0}}$) for Metric {i+1}')
-                plt.xlabel('Filtration value')
-                plt.ylabel('Landscape value')
-                plt.legend(loc='upper right')
+                    plt.plot(grid, pl_matrix[k], label=f"lambda$_{{{k+1}}}$")
+                plt.title(
+                    rf"Persistence Landscape (H$_{{0}}$) for Metric {i+1}"
+                )
+                plt.xlabel("Filtration value")
+                plt.ylabel("Landscape value")
+                plt.legend(loc="upper right")
                 plt.tight_layout()
                 plt.savefig(f"landscape_metric_{i+1}_H0.png")
                 plt.close()
@@ -143,8 +148,6 @@ for i, c in enumerate(constant_arrays):
             print(f"Error computing H{d} for Metric {i+1}: {e}")
             entropies[i][f"H{d}"] = None
 
-
     gd.plot_persistence_diagram(diagram_rips, alpha=0.3)
     _ = plt.title(f"Persistence Diagram for Metric {i+1}")
     plt.savefig(f"persistence_diagram_{i+1}.png")
-

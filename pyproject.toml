@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "topocore"
+name = "fmtda"
 authors = [
     { name = "Caelan Osman", email = "caelan.osman@jhuapl.edu" },
     { name = "Seth Graham", email = "Seth.Graham@jhuapl.edu" },
@@ -26,11 +26,11 @@ classifiers = [
 dependencies = [
     "gudhi==3.11.0",
     "pandas==2.2.3",
-    "matplotlib==3.10.1",
-    "numpy==2.2.4",
+    "matplotlib==3.9.4",
+    "numpy==2.1.3",
     "scipy==1.15.2",
     "openpyxl==3.1.5",
-    "scikit-learn==1.6.1"
+    "scikit-learn==1.6.1",
 ]
 dynamic = ["version"]
 [project.urls]
