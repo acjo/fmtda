@@ -289,7 +289,7 @@ def metric_8(c: NDArray, x: Series, y: Series) -> float | NDArray:
     return d
 
 
-def metric_9(w:NDArray, c: list[NDArray], x: list[NDArray], y: list[NDArray]) -> float | NDArray:
+def metric_9(c: tuple[NDArray], x:NDArray, y: NDArray, sizes:list) -> float | NDArray:
     """
     Metric 8 based on a weighted combination of metrics 1 - 8.
 
@@ -312,12 +312,23 @@ def metric_9(w:NDArray, c: list[NDArray], x: list[NDArray], y: list[NDArray]) ->
     d : float
         distance
     """
-    if len(c) == 8:
+    if len(c) != 2 or not isinstance(c,tuple):
         raise RuntimeError(
-            "c must have eight elements individual weights arrays for each metric."
+            "c parameter must be length 2 tuple where the first element is the coefficient for the weighted sum of the metrics. " \
+            "The second element must be a list that contains the sub coefficients for each indivudal metric."  
         )
 
-    d = [eval(f"metric_{i}")(c[0], x[i], y[i]) for i in range(1, 9)]
+    w, c_vals = c
+
+    d = []
+    for i in range(8):
+        fn = eval(f"metric_{i+1}")  
+
+        left = sum(sizes[:i])
+        right = sum(sizes[:i+1])
+        
+        d.append(fn(c_vals[i], x[left:right], y[left:right]))
+
 
     if x.ndim == 1:
         d = float(np.inner(w, np.asarray(d)))

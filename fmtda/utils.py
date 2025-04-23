@@ -3,7 +3,6 @@
 import numpy as np
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
-
 from fmtda.parse_dict import get_abbrev_map
 
 abbrev2desc, _ = get_abbrev_map()
@@ -361,3 +360,42 @@ def feature_8(
     x_vals = extract_features(x, feature_set, transforms)
 
     return x_vals, feature_set, transforms
+
+
+def feature_9(
+    x: Series | DataFrame,
+) -> tuple[NDArray, list[list[str]], list[str]]:
+
+    """
+    Features for 8th metric based on Gastro intestinal symptoms and regions where pain is present.
+
+    Parameters
+    ----------
+    x : Series or DataFrame
+        Full dataset.
+
+    Returns
+    -------
+    x_vals : NDArray
+        feature matrix
+    feature_set : list of list of strings
+        each sublist contains the original features considered for a super feature
+    transforms : list of strings
+        transformation equation to turn the sub list of features into a super feature
+    """
+
+    all_xvals = []
+    all_feature_set = []
+    all_transforms = []
+    for i in range(8):
+        x_vals, feature_set, transforms = eval(f"feature_{i+1}")(x)
+        all_xvals.append(x_vals)
+        all_feature_set.append(feature_set)
+        all_transforms.append(transforms)
+
+    all_xvals = np.concatenate(all_xvals, axis=1)
+
+    return all_xvals, all_feature_set, all_transforms
+
+
+    

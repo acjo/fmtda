@@ -9,6 +9,7 @@ from scipy.spatial.distance import cdist
 
 from fmtda import Metric, SimplexTreeBuilder
 from fmtda import utils
+from copy import deepcopy
 
 rcParams["font.family"] = "serif"
 rcParams["font.size"] = 15
@@ -39,8 +40,10 @@ constant_arrays = [
     np.random.random(1),
     np.random.random(2),
 ]
-# constant_arrays.append(constant_arrays)
-# feature_set = []
+w = np.random.random(8)
+copy_constant_arrays = deepcopy(constant_arrays)
+constant_arrays.append((w,copy_constant_arrays))
+sizes = []
 
 for i, c in enumerate(constant_arrays):
     # instantiate metric
@@ -55,8 +58,12 @@ for i, c in enumerate(constant_arrays):
     x_df.dropna(axis=0, inplace=True)
 
     data = x_df.values
-    print(data.shape)
-    distMat = metric.dist_matrix(data)
+    print(f"Data shape: {data.shape}")
+    if metric.type != 9:
+        sizes.append(data.shape[1])
+        distMat = metric.dist_matrix(data)
+    else:
+        distMat = metric.dist_matrix(data, sizes=sizes)
 
     print(f"Dist matrix shape: {distMat.shape}")
 

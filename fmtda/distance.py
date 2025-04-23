@@ -35,12 +35,12 @@ class Metric(object):
 
     """
 
-    def __init__(self, t: int, c: NDArray) -> None:
+    def __init__(self, t: int, c: NDArray | tuple[np.ndarray]) -> None:
         if not isinstance(t, int):
             raise ValueError(f"type parameter must be int, not {type(t)}")
-        if not isinstance(c, np.ndarray):
+        if not isinstance(c, np.ndarray) and not isinstance(c, tuple):
             raise ValueError(
-                f"Constant multiple parameter must be an np.ndarray, not {type(c)}"
+                f"Constant multiple parameter must be an np.ndarray or length 2 tuple of np.ndarray, not {type(c)}"
             )
         self.type: int = t
         self.c: NDArray = c
@@ -54,7 +54,7 @@ class Metric(object):
         return
 
     def __call__(
-        self, x: DataFrame | Series, y: DataFrame | Series
+        self, x: DataFrame | Series, y: DataFrame | Series, **kwargs
     ) -> float | NDArray:
         """Calculate the distance between x and y.
 
@@ -72,14 +72,14 @@ class Metric(object):
         distance : float or ndarray
             Distance betwen the points. If x and y are 2d (N,M) ndarrays the result will be a (,N) ndarray of distances.
         """
-        return self.fn(self.c, x, y)
+        return self.fn(self.c, x, y, **kwargs)
 
-    def dist_matrix(self, X: DataFrame) -> NDArray:
+    def dist_matrix(self, X: NDArray, **kwargs) -> NDArray:
         """Return the distance matrix.
 
         Parameters
         ----------
-        X : (N,M) DataFrame
+        X : (N,M) NDArray
             Array of points
 
         Returns
@@ -87,4 +87,4 @@ class Metric(object):
         D : (N,N) ndarray
             NxN array of distances
         """
-        return cdist(X, X, metric=self)
+        return cdist(X, X, metric=self, **kwargs)
