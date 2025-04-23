@@ -5,6 +5,7 @@ from typing import Callable
 import numpy as np
 from numpy.typing import NDArray
 from pandas.core.frame import DataFrame, Series
+from scipy.spatial.distance import cdist
 
 from fmtda import metric_types
 
@@ -86,9 +87,4 @@ class Metric(object):
         D : (N,N) ndarray
             NxN array of distances
         """
-        N = X.shape[0]
-        D = np.zeros((N, N), dtype=float)
-        for i in range(N):
-            for j in range(N):
-                D[i, j] = self(X.iloc[i, :], X.iloc[j, :])
-        return D
+        return cdist(X, X, metric=self)
