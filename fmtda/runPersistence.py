@@ -18,7 +18,7 @@ rcParams["xtick.labelsize"] = 10
 rcParams["ytick.labelsize"] = 10
 rcParams["legend.fontsize"] = 10
 rcParams["figure.figsize"] = (7, 7)
-rcParams["figure.dpi"] = 200
+rcParams["figure.dpi"] = 300
 rcParams["axes.titlesize"] = 15
 
 
@@ -80,17 +80,6 @@ for i, c in enumerate(constant_arrays):
     st_rips = gd.RipsComplex(
         distance_matrix=distMat, max_edge_length=np.inf
     ).create_simplex_tree(max_dimension=max_dim)
-
-    # rips_filtration = st_rips.get_filtration()
-    # rips_list = list(rips_filtration)
-    # for splx in rips_list[300:600]:
-    #     print(splx)
-
-    # thresholds = [t for _, t in rips_list]
-
-    # close_to_1_55 = np.argmin(np.abs(np.asarray(thresholds) - 1.55))
-
-    # print(f"connected compoentent close to 1.55: {rips_list[close_to_1_55]}")
 
     diagram_rips = st_rips.persistence(
         homology_coeff_field=2, persistence_dim_max=True, min_persistence=1.45

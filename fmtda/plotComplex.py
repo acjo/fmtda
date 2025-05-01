@@ -20,8 +20,70 @@ rcParams["xtick.labelsize"] = 10
 rcParams["ytick.labelsize"] = 10
 rcParams["legend.fontsize"] = 10
 rcParams["figure.figsize"] = (7, 7)
-rcParams["figure.dpi"] = 200
+rcParams["figure.dpi"] = 300
 rcParams["axes.titlesize"] = 15
+
+
+def build_nx_graph(
+    complex: SimplicialComplex, data: np.ndarray
+) -> tuple[nx.Graph, list[str]]:
+    G = nx.Graph()
+
+    for s, p_simplicies in complex.simplices.items():
+        for simplex in p_simplicies:
+            val = list(simplex)
+            if s == 0:
+                G.add_node(val[0])
+            elif s == 1:
+                G.add_edge(val[0], val[1])
+
+    clusters = nx.connected_components(G)
+    node_types = {}
+    for cluster in clusters:
+        cluster_list = list(cluster)
+        have_fibro = data[cluster_list, 0].astype(bool)
+        for node, partition_bool in zip(cluster_list, have_fibro):
+            if partition_bool:
+                node_types[node] = "red"
+            else:
+                node_types[node] = "blue"
+
+    node_colors: list[str] = [node_types[node] for node in G.nodes()]
+
+    return G, node_colors
+
+
+def plot_nx_graph(
+    G: nx.Graph, colors: list[str], title: str = "", labels: bool = True
+):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_title(title)
+
+    nx.draw_networkx(
+        G,
+        pos=nx.nx_agraph.graphviz_layout(G),
+        node_size=150,
+        font_size=8,
+        with_labels=True,
+        font_weight="bold",
+        node_color=colors,
+        labels={node: "" for node in G.nodes()},
+        ax=ax,
+    )
+
+    color_dict = {"Fibro": "red", "Control": "blue"}
+    if labels:
+        from matplotlib.patches import Patch
+
+        legend_elements = [
+            Patch(facecolor=color, label=node_type)
+            for node_type, color in color_dict.items()
+        ]
+        ax.legend(handles=legend_elements, loc="best")
+    plt.tight_layout()
+
+    return fig
 
 
 # %%
@@ -81,27 +143,20 @@ for i, c in enumerate(constant_arrays):
 
 # %%
 # plot metric 5 simplex at threshold value 5.5
-metric_5 = metrics[5]
-D = metric_5.dist_matrix(data_collection[5])
 
-filtration = SimplicialComplex.build_filtration_incrementally(
-    D, np.array([2], dtype=float)
-)
-G = filtration[0].visualize_complex()
-fig = plt.gcf()
-plt.savefig("metric_30_2.0.png")
-plt.show()
-# print(filtration[0].compute_homology_ranks())
-H = filtration[0].find_homologies(0)
-# print(H)
-#
+metric_idx = 5
+thresholds = [2.0, 5.2, 13, 14]
+metric_5 = metrics[metric_idx]
+data = data_collection[metric_idx]
+D = metric_5.dist_matrix(data)
+for r in thresholds:
+    rho = np.array([r], dtype=float)
+    filtration = SimplicialComplex.build_filtration_incrementally(D, rho)
+    graph, _ = build_nx_graph(filtration[0], data)
+    colors = ["blue" for _ in graph.nodes()]
+    title = f"Clusters for Metric {metric_idx} and radius {rho.item():.1f}"
 
-cc = list(nx.connected_components(G))
-print(len(cc))
-
-for c in cc:
-    have_fibro = data_collection[5][list(c), 0].astype(bool)
-    print(f"Number of components in cluster: {len(c)}")
-    print(
-        f"Percentage of the compoenents that have fibromyalaga:{sum(have_fibro)/len(have_fibro):.4f}"
-    )
+    file_name = f"metric_{metric_idx}_{r:.1f}.png"
+    plot_nx_graph(graph, colors, title=title, labels=False)
+    plt.savefig(file_name)
+    # plt.show()
