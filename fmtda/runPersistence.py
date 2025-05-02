@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from gudhi.representations import Entropy
 from gudhi.representations.vector_methods import Landscape
+from matplotlib.gridspec import GridSpec
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
 
@@ -30,6 +31,7 @@ np.random.seed(32)
 patientData = pd.read_excel(data_path, sheet_name="data_66")
 max_dim = 2
 entropies = {}
+st_rips_per_metric = {}
 
 # set weights for metrics.
 constant_arrays = [
@@ -85,6 +87,8 @@ for i, c in enumerate(constant_arrays):
         homology_coeff_field=2, persistence_dim_max=True, min_persistence=1.45
     )
 
+    st_rips_per_metric[i] = diagram_rips
+    
     # Persistence Diagram Analysis via Persistence Entropy + Landscapes
     entropies[i] = {}
     for d in range(max_dim):
@@ -111,8 +115,8 @@ for i, c in enumerate(constant_arrays):
                 f"Persistence Entropy for Metric {i+1} on H{d}: {persistence_entropy}"
             )
 
-            # Plotting Persistence Landscapes for H1
-            if d == 1:
+            # Plotting Persistence Landscapes for H0
+            if d == 0:
                 landscape = Landscape(num_landscapes=5, resolution=100)
                 landscape.fit([valid_pairs])
                 pl_vector = landscape.transform([valid_pairs])[0]
@@ -140,3 +144,81 @@ for i, c in enumerate(constant_arrays):
     gd.plot_persistence_diagram(diagram_rips, alpha=0.3)
     _ = plt.title(f"Persistence Diagram for Metric {i+1}")
     plt.savefig(f"persistence_diagram_{i+1}.png")
+
+# Persistence Entropy plot for metrics 1,2,3,5,8
+metrics = [1, 2, 3, 5, 8]
+idxs    = [m - 1 for m in metrics]
+labels  = [f"Metric {m}" for m in metrics]
+
+def _scalar_or_nan(v):
+    if v is None:
+        return 0.0
+    if isinstance(v, (list, tuple, np.ndarray)):
+        return float(v[0])
+    return float(v)
+
+h0 = [_scalar_or_nan(entropies.get(i, {}).get("H0")) for i in idxs]
+h1 = [_scalar_or_nan(entropies.get(i, {}).get("H1")) for i in idxs]
+
+fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(12, 5))
+ax0.bar(labels, h0, color="skyblue")
+ax0.set_title(r"Persistence Entropy $H_0$")
+ax0.set_ylabel("Entropy")
+ax0.tick_params(axis="x", rotation=45)
+
+ax1.bar(labels, h1, color="salmon")
+ax1.set_title(r"Persistence Entropy $H_1$")
+ax1.tick_params(axis="x", rotation=45)
+
+plt.suptitle("Persistence Entropy for Metrics 1, 2, 3, 5, 8", fontsize=14)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.savefig("persistence_entropy_subplots.png")
+plt.close()
+
+# Persistence landscape subplots for metrics 1,2,3,5,8
+fig, axes = plt.subplots(2, 3, figsize=(16, 6), sharey=True)
+axes = axes.flatten()
+
+for ax, m in zip(axes, metrics):
+    idx = m - 1
+    diagram = st_rips_per_metric.get(idx)
+    if diagram is None:
+        ax.axis("off")
+        continue
+
+    bd = np.array([p[1] for p in diagram if p[0] == 0])
+    lifetimes = bd[:, 1] - bd[:, 0]
+    valid = bd[np.isfinite(lifetimes) & (lifetimes > 1e-6)]
+    if valid.size == 0:
+        ax.axis("off")
+        continue
+
+    L = Landscape(num_landscapes=3, resolution=300)
+    L.fit([valid])
+    pl = L.transform([valid])[0].reshape(3, 300)
+    grid = L.grid_
+
+    for k in range(3):
+        ax.plot(grid, pl[k], label=rf"$\lambda_{{{k+1}}}$")
+
+    ax.set_xlim(0, 15)
+    ax.set_title(f"Metric {m}")
+    ax.set_xlabel("Filtration value")
+    ax.legend()
+    
+# Hide unused subplots
+for j in range(len(metrics), len(axes)):
+    axes[j].axis("off")
+
+axes[0].set_ylabel("Landscape value")
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(1.12, 1))
+plt.suptitle("Persistence Landscapes ($H_0$) for Metrics 1, 2, 3, 5, 8", y=1.05, fontsize=14)
+plt.tight_layout()
+plt.subplots_adjust(top=0.75)
+plt.savefig("landscape_subplots.png")
+plt.close()
+    
+
+
+
