@@ -42,6 +42,10 @@ def build_nx_graph(
     for cluster in clusters:
         cluster_list = list(cluster)
         have_fibro = data[cluster_list, 0].astype(bool)
+        print(f"Number of points in cluster: {len(cluster_list)}")
+        print(
+            f"Percentage of points that have fibromylagia: {have_fibro.sum().item()/have_fibro.size}"
+        )
         for node, partition_bool in zip(cluster_list, have_fibro):
             if partition_bool:
                 node_types[node] = "red"
@@ -102,11 +106,10 @@ constant_arrays = [
     np.concatenate((np.random.random(1), np.ones(2))),  # 2
     np.concatenate((np.random.random(1), np.ones(2))),  # 3
     np.random.random(1),  # 4
-    np.concatenate((np.random.random(1) * 0.00001, np.random.random(1))),  # 5
-    # np.random.random(2),
-    np.random.random(2),
-    np.random.random(1),
-    np.random.random(2),
+    np.concatenate((np.random.random(1), np.random.random(1))),  # 5
+    np.random.random(2),  # 6
+    np.random.random(1),  # 7
+    np.random.random(2),  # 8
 ]
 w = np.random.random(8)
 copy_constant_arrays = deepcopy(constant_arrays)
@@ -156,14 +159,18 @@ def gen_figures(metric_idx, thresholds):
         file_name = f"metric_{metric_idx}_{r:.1f}.png"
         plot_nx_graph(graph, colors, title=title, labels=True)
         plt.savefig(file_name)
+        plt.close(plt.gcf())
 
 
 if __name__ == "__main__":
-    for cc in constant_arrays:
-        print(cc)
-    metric_idx = 5
-    thresholds = np.array([2.0, 5.2, 13, 14], dtype=float)
-    gen_figures(metric_idx, thresholds)
+    # for cc in constant_arrays:
+    #     print(cc)
+    # print("Metric 5:")
+    # metric_idx = 5
+    # thresholds = np.array([2.0, 5.2, 13, 14], dtype=float)
+    # gen_figures(metric_idx, thresholds)
+    print("Metric 8:")
     metric_idx = 8
-    thresholds = np.arange(1, 20, dtype=int)
+    thresholds = np.array([13.0])
     gen_figures(metric_idx, thresholds)
+    print()
