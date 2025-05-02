@@ -98,11 +98,11 @@ patientData = pd.read_excel(data_path, sheet_name="data_66")
 
 # set weights for metrics.
 constant_arrays = [
-    np.concatenate((np.random.random(1), np.ones(2))),
-    np.concatenate((np.random.random(1), np.ones(2))),
-    np.concatenate((np.random.random(1), np.ones(2))),
-    np.random.random(1),
-    np.concatenate((np.random.random(1) * 0.00001, np.random.random(1))),
+    np.concatenate((np.random.random(1), np.ones(2))),  # 1
+    np.concatenate((np.random.random(1), np.ones(2))),  # 2
+    np.concatenate((np.random.random(1), np.ones(2))),  # 3
+    np.random.random(1),  # 4
+    np.concatenate((np.random.random(1) * 0.00001, np.random.random(1))),  # 5
     # np.random.random(2),
     np.random.random(2),
     np.random.random(1),
@@ -141,22 +141,29 @@ for i, c in enumerate(constant_arrays):
 
     data_collection[key] = data
 
-# %%
-# plot metric 5 simplex at threshold value 5.5
 
-metric_idx = 5
-thresholds = [2.0, 5.2, 13, 14]
-metric_5 = metrics[metric_idx]
-data = data_collection[metric_idx]
-D = metric_5.dist_matrix(data)
-for r in thresholds:
-    rho = np.array([r], dtype=float)
-    filtration = SimplicialComplex.build_filtration_incrementally(D, rho)
-    graph, _ = build_nx_graph(filtration[0], data)
-    colors = ["blue" for _ in graph.nodes()]
-    title = f"Clusters for Metric {metric_idx} and radius {rho.item():.1f}"
+def gen_figures(metric_idx, thresholds):
+    metric = metrics[metric_idx]
+    data = data_collection[metric_idx]
+    D = metric.dist_matrix(data)
+    for r in thresholds:
+        rho = np.array([r], dtype=float)
+        filtration = SimplicialComplex.build_filtration_incrementally(D, rho)
+        graph, colors = build_nx_graph(filtration[0], data)
+        # colors = ["blue" for _ in graph.nodes()]
+        title = f"Clusters for metric {metric_idx} and radius {rho.item():.1f}"
 
-    file_name = f"metric_{metric_idx}_{r:.1f}.png"
-    plot_nx_graph(graph, colors, title=title, labels=False)
-    plt.savefig(file_name)
-    # plt.show()
+        file_name = f"metric_{metric_idx}_{r:.1f}.png"
+        plot_nx_graph(graph, colors, title=title, labels=True)
+        plt.savefig(file_name)
+
+
+if __name__ == "__main__":
+    for cc in constant_arrays:
+        print(cc)
+    metric_idx = 5
+    thresholds = np.array([2.0, 5.2, 13, 14], dtype=float)
+    gen_figures(metric_idx, thresholds)
+    metric_idx = 8
+    thresholds = np.arange(1, 20, dtype=int)
+    gen_figures(metric_idx, thresholds)

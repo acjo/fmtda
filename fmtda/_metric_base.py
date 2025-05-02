@@ -25,8 +25,14 @@ def taxi_cab(c: np.ndarray, x: np.ndarray, y: np.ndarray) -> float | np.ndarray:
         * If c has non-positive values.
         * If x or y has more than 2 dimensions.
     """
-    if (c <= 0).any():
-        raise ValueError("Constant vector needs to be elementwise postive.")
+    if (c < 0).any():
+        raise ValueError(
+            "Constant vector needs to be elementwise non-negative."
+        )
+    if (c == 0).sum() == c.size:
+        raise ValueError(
+            "Constant vector needs to contain at least one strictly positive value."
+        )
 
     x = np.atleast_2d(x)
     y = np.atleast_2d(y)

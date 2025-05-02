@@ -135,12 +135,12 @@ def metric_4(c: NDArray | float, x: NDArray, y: NDArray) -> float | NDArray:
     """
     if isinstance(c, float):
         c = np.array([c], dtype=float)
-    if c.size != 1:
+    if c.size != 1:  # type: ignore
         raise RuntimeError("c must be a float or a single element ndarray.")
 
     x_2d = np.atleast_2d(x)
     y_2d = np.atleast_2d(y)
-    d0 = c[0] * np.abs(x_2d[:, 0] - y_2d[:, 0])
+    d0 = c[0] * np.abs(x_2d[:, 0] - y_2d[:, 0])  # type: ignore
     d1 = euclidean(1.0, x_2d[:, 1:], y_2d[:, 1:])
     d = d0 + d1
 
@@ -283,7 +283,9 @@ def metric_8(c: NDArray, x: NDArray, y: NDArray) -> float | NDArray:
     return d
 
 
-def metric_9(c: tuple[NDArray], x:NDArray, y: NDArray, sizes:list) -> float | NDArray:
+def metric_9(
+    c: tuple[NDArray], x: NDArray, y: NDArray, sizes: list
+) -> float | NDArray:
     """
     Metric 8 based on a weighted combination of metrics 1 - 8.
 
@@ -306,23 +308,22 @@ def metric_9(c: tuple[NDArray], x:NDArray, y: NDArray, sizes:list) -> float | ND
     d : float
         distance
     """
-    if len(c) != 2 or not isinstance(c,tuple):
+    if len(c) != 2 or not isinstance(c, tuple):
         raise RuntimeError(
-            "c parameter must be length 2 tuple where the first element is the coefficient for the weighted sum of the metrics. " \
-            "The second element must be a list that contains the sub coefficients for each indivudal metric."  
+            "c parameter must be length 2 tuple where the first element is the coefficient for the weighted sum of the metrics. "
+            "The second element must be a list that contains the sub coefficients for each indivudal metric."
         )
 
     w, c_vals = c
 
     d = []
     for i in range(8):
-        fn = eval(f"metric_{i+1}")  
+        fn = eval(f"metric_{i+1}")
 
         left = sum(sizes[:i])
-        right = sum(sizes[:i+1])
-        
-        d.append(fn(c_vals[i], x[left:right], y[left:right]))
+        right = sum(sizes[: i + 1])
 
+        d.append(fn(c_vals[i], x[left:right], y[left:right]))
 
     if x.ndim == 1:
         d = float(np.inner(w, np.asarray(d)))
